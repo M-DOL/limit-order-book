@@ -51,6 +51,7 @@ template <Side S> std::vector<Trade> OrderBook::matchSide(Order &incoming) {
       trades.emplace_back(Trade{incoming.id, passive.id, passive.price, qty});
       incoming.quantity -= qty;
       passive.quantity -= qty;
+      level.reduceQuantity(qty);
       if (!passive.quantity) {
         uint64_t pid = passive.id;
         auto listIt = orderMap_[pid];
@@ -58,7 +59,8 @@ template <Side S> std::vector<Trade> OrderBook::matchSide(Order &incoming) {
         level.removeOrder(listIt);
       }
     }
-    pruneEmptyLevel(OppV<S>, best);
+    if (level.isEmpty())
+      pruneEmptyLevel(OppV<S>, best);
   }
   return trades;
 }

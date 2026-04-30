@@ -31,7 +31,8 @@ public:
   // Modify quantity of a resting order.
   // Decreasing quantity preserves queue position (in-place update).
   // Increasing quantity re-queues at the back via cancel + add (loses
-  // priority). Returns false if ID unknown or newQuantity == 0.
+  // priority). If newQuantity == 0, cancels the order and returns true.
+  // Returns false if ID unknown.
   bool modifyOrder(uint64_t id, uint64_t newQuantity);
 
   // Best bid price. Returns 0 if book is empty on bid side.
