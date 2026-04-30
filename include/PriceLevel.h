@@ -4,30 +4,21 @@
 #include <list>
 #include <cstdint>
 
-// All resting orders at a single price point.
-// Orders are stored in FIFO order: price-time priority.
-// std::list gives O(1) insert at back and O(1) erase anywhere
-// given an iterator, which is how cancel will work.
+// All resting orders at a single price point, stored by value.
+// addOrder returns a stable iterator; callers (OrderBook) store it in orderMap_
+// for O(1) cancel and modify without any additional heap allocation.
 class PriceLevel {
 public:
-    // Add a new order to the back of the queue.
-    void addOrder(Order* order);
+    using Iter = std::list<Order>::iterator;
 
-    // Remove a specific order by pointer.
-    void removeOrder(Order* order);
-
-    // Total quantity resting at this price level.
+    Iter     addOrder(Order order);    // O(1); returns stable iterator
+    Order    removeOrder(Iter it);     // O(1); returns Order so modify can reuse it
+    Order&   front();
     uint64_t totalQuantity() const;
-
-    void adjustQuantity(int64_t delta);
-
-    // True if no orders remain at this level.
-    bool isEmpty() const;
-
-    // Access the front order (first to be matched).
-    Order* front();
+    void     adjustQuantity(int64_t delta);
+    bool     isEmpty() const;
 
 private:
-    std::list<Order*> orders_;
-    uint64_t          totalQuantity_ = 0;
+    std::list<Order> orders_;
+    uint64_t         totalQuantity_ = 0;
 };

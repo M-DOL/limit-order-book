@@ -53,13 +53,22 @@ private:
     // Asks: ascending price order
     std::map<uint64_t, PriceLevel> asks_;
 
-    // Fast O(1) lookup: order ID → Order*
-    std::unordered_map<uint64_t, Order*> orderMap_;
+    // Stable iterators into PriceLevel's list — O(1) lookup, cancel, and modify.
+    // PriceLevel owns the Order objects; this map just indexes into them.
+    std::unordered_map<uint64_t, PriceLevel::Iter> orderMap_;
 
     // Internal match loop — called by addOrder before resting.
-    // Drains the opposite side as long as prices cross.
-    std::vector<Trade> match(Order* incoming);
+    std::vector<Trade> match(Order& incoming);
 
     // Helper: remove an empty price level from the book.
     void pruneEmptyLevel(Side side, uint64_t price);
+
+    // Compile-time side dispatch: select the right map, best-price, and crossing predicate.
+    template <Side S> auto&    sideBook();
+    template <Side S> uint64_t bestPrice() const;
+    template <Side S> bool     crosses(uint64_t incomingPrice, uint64_t restingBest) const;
+
+    // Logic written once, instantiated for each side.
+    template <Side S> void               cancelSide(PriceLevel::Iter it);
+    template <Side S> std::vector<Trade> matchSide(Order& incoming);
 };

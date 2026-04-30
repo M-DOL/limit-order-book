@@ -1,37 +1,30 @@
 #include "PriceLevel.h"
-#include <algorithm>
 
-void PriceLevel::addOrder(Order *order)
-{
-    orders_.push_back(order);
-    totalQuantity_ += order->quantity;
+PriceLevel::Iter PriceLevel::addOrder(Order order) {
+    totalQuantity_ += order.quantity;
+    orders_.push_back(std::move(order));
+    return std::prev(orders_.end());
 }
 
-// Remove a specific order by pointer.
-void PriceLevel::removeOrder(Order *order)
-{
-    orders_.erase(std::find(orders_.begin(), orders_.end(), order));
-    totalQuantity_ -= order->quantity;
+Order PriceLevel::removeOrder(Iter it) {
+    Order o = std::move(*it);
+    totalQuantity_ -= o.quantity;
+    orders_.erase(it);
+    return o;
+}
+
+Order& PriceLevel::front() {
+    return orders_.front();
+}
+
+uint64_t PriceLevel::totalQuantity() const {
+    return totalQuantity_;
 }
 
 void PriceLevel::adjustQuantity(int64_t delta) {
     totalQuantity_ += delta;
 }
 
-// Total quantity resting at this price level.
-uint64_t PriceLevel::totalQuantity() const
-{
-    return totalQuantity_;
-}
-
-// True if no orders remain at this level.
-bool PriceLevel::isEmpty() const
-{
+bool PriceLevel::isEmpty() const {
     return orders_.empty();
-}
-
-// Access the front order (first to be matched).
-Order *PriceLevel::front()
-{
-    return orders_.front();
 }
