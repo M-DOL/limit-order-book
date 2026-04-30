@@ -52,9 +52,10 @@ template <Side S> std::vector<Trade> OrderBook::matchSide(Order &incoming) {
       incoming.quantity -= qty;
       passive.quantity -= qty;
       if (!passive.quantity) {
-        auto listIt = orderMap_[passive.id];
-        orderMap_.erase(passive.id); // remove index entry
-        level.removeOrder(listIt);   // O(1); destroys Order, passive dangling
+        uint64_t pid = passive.id;
+        auto listIt = orderMap_[pid];
+        orderMap_.erase(pid);
+        level.removeOrder(listIt);
       }
     }
     pruneEmptyLevel(OppV<S>, best);
