@@ -21,7 +21,7 @@ Bids are stored in a `std::map<uint64_t, PriceLevel, std::greater<uint64_t>>` (d
 Orders within a price level are stored in a `std::list` to maintain FIFO priority. The key property is iterator stability: erasing a node from a `std::list` does not invalidate any other iterators or pointers, which makes O(1) cancel possible when iterators are cached. A `std::deque` would offer better cache performance for pure FIFO access, but arbitrary mid-queue removal (required for cancel) is O(n) with element shifting — unacceptable for a cancel-heavy workload.
 
 ### `std::unordered_map` for order lookup
-A `std::unordered_map<uint64_t, Order*>` maps order IDs to order pointers, giving O(1) average-case lookup for cancel and modify. Order IDs are integers, so hashing is cheap with negligible collision probability in practice.
+A `std::unordered_map<uint64_t, PriceLevel::Iter>` maps order IDs to their stable `std::list` iterators, giving O(1) average-case lookup, cancel, and modify. `PriceLevel` owns the `Order` objects; this map is a pure index into them.
 
 ## Complexity
 
@@ -29,12 +29,10 @@ A `std::unordered_map<uint64_t, Order*>` maps order IDs to order pointers, givin
 |-----------|------------|
 | `addOrder` (no match) | O(log n) — map insert by price |
 | `addOrder` (with match) | O(k log n) — k trades across n price levels |
-| `cancelOrder` | O(m) — linear scan within price level of size m |
-| `modifyOrder` (decrease) | O(m) — linear scan for cancel path |
-| `modifyOrder` (increase) | O(m) — remove + re-insert |
+| `cancelOrder` | O(1) — iterator lookup + `list::erase` |
+| `modifyOrder` (decrease) | O(1) — in-place field update |
+| `modifyOrder` (increase) | O(log n) — cancel + re-insert |
 | `bestBid` / `bestAsk` | O(1) |
-
-> Note: cancel and modify become O(1) within the price level if order insertion iterators are cached in a side map — a straightforward extension not yet implemented.
 
 ## Build
 
