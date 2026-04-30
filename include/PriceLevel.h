@@ -14,9 +14,9 @@ public:
   Iter addOrder(Order order); // O(1); returns stable iterator
   Order removeOrder(Iter it); // O(1); returns Order so modify can reuse it
   Order &front();
-  uint64_t totalQuantity() const;
+  [[nodiscard]] uint64_t totalQuantity() const;
   void reduceQuantity(uint64_t amount);
-  bool isEmpty() const;
+  [[nodiscard]] bool isEmpty() const;
 
 private:
   std::list<Order> orders_;

@@ -35,17 +35,17 @@ public:
   bool modifyOrder(uint64_t id, uint64_t newQuantity);
 
   // Best bid price. Returns 0 if book is empty on bid side.
-  uint64_t bestBid() const;
+  [[nodiscard]] uint64_t bestBid() const;
 
   // Best ask price. Returns 0 if book is empty on ask side.
-  uint64_t bestAsk() const;
+  [[nodiscard]] uint64_t bestAsk() const;
 
   // Print a human-readable view of the book (for debugging).
   void print() const;
 
 private:
   // Bids: descending price order
-  std::map<uint64_t, PriceLevel, std::greater<uint64_t>> bids_;
+  std::map<uint64_t, PriceLevel, std::greater<>> bids_;
 
   // Asks: ascending price order
   std::map<uint64_t, PriceLevel> asks_;
@@ -63,9 +63,9 @@ private:
   // Compile-time side dispatch: select the right map, best-price, and crossing
   // predicate.
   template <Side S> auto &sideBook();
-  template <Side S> uint64_t bestPrice() const;
+  template <Side S> [[nodiscard]] uint64_t bestPrice() const;
   template <Side S>
-  bool crosses(uint64_t incomingPrice, uint64_t restingBest) const;
+  [[nodiscard]] bool crosses(uint64_t ip, uint64_t bp) const;
 
   // Logic written once, instantiated for each side.
   template <Side S> void cancelSide(PriceLevel::Iter it);

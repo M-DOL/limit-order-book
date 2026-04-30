@@ -4,7 +4,7 @@
 using namespace std;
 
 template <Side S>
-constexpr Side OppV = (S == Side::Buy) ? Side::Sell : Side::Buy;
+constexpr Side OppV = S == Side::Buy ? Side::Sell : Side::Buy;
 
 // ── Compile-time side helpers ────────────────────────────────────────────────
 
@@ -69,9 +69,8 @@ std::vector<Trade> OrderBook::addOrder(uint64_t id, Side side, uint64_t price,
   Order incoming{id, side, price, quantity, timestamp};
   auto trades = match(incoming);
   if (incoming.quantity) {
-    PriceLevel::Iter it = (side == Side::Buy)
-                              ? bids_[price].addOrder(std::move(incoming))
-                              : asks_[price].addOrder(std::move(incoming));
+    auto it = (side == Side::Buy) ? bids_[price].addOrder(incoming)
+                                  : asks_[price].addOrder(incoming);
     orderMap_[id] = it;
   }
   return trades;
@@ -81,7 +80,7 @@ bool OrderBook::cancelOrder(uint64_t id) {
   auto mapIt = orderMap_.find(id);
   if (mapIt == orderMap_.end())
     return false;
-  PriceLevel::Iter listIt = mapIt->second;
+  auto listIt = mapIt->second;
   Side side = listIt->side;
   orderMap_.erase(mapIt);
   (side == Side::Buy) ? cancelSide<Side::Buy>(listIt)
@@ -95,7 +94,7 @@ bool OrderBook::modifyOrder(uint64_t id, uint64_t newQuantity) {
     return false;
   if (!newQuantity)
     return cancelOrder(id);
-  PriceLevel::Iter listIt = mapIt->second;
+  auto listIt = mapIt->second;
   if (newQuantity < listIt->quantity) {
     // Decrease: update in place, preserve queue position
     PriceLevel &level = (listIt->side == Side::Buy) ? bids_[listIt->price]
@@ -123,12 +122,12 @@ uint64_t OrderBook::bestAsk() const {
 
 void OrderBook::print() const {
   cout << "ASKS:\n";
-  for (auto &[price, level] : asks_)
+  for (const auto &[price, level] : asks_)
     cout << '\t' << price << " | qty: " << level.totalQuantity() << '\n';
   if (asks_.empty())
     cout << "\tEMPTY\n";
   cout << "BIDS:\n";
-  for (auto &[price, level] : bids_)
+  for (const auto &[price, level] : bids_)
     cout << '\t' << price << " | qty: " << level.totalQuantity() << '\n';
   if (bids_.empty())
     cout << "\tEMPTY\n";

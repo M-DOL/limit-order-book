@@ -2,12 +2,12 @@
 
 PriceLevel::Iter PriceLevel::addOrder(Order order) {
   totalQuantity_ += order.quantity;
-  orders_.push_back(std::move(order));
+  orders_.push_back(order);
   return std::prev(orders_.end());
 }
 
 Order PriceLevel::removeOrder(Iter it) {
-  Order o = std::move(*it);
+  Order o = *it;
   totalQuantity_ -= o.quantity;
   orders_.erase(it);
   return o;

@@ -26,3 +26,20 @@ add_executable(bench_orderbook
 
 target_include_directories(bench_orderbook PRIVATE include)
 target_link_libraries(bench_orderbook PRIVATE benchmark::benchmark)
+
+# ── clang-tidy lint target ───────────────────────────────────────────────────
+find_program(CLANG_TIDY clang-tidy HINTS /opt/homebrew/opt/llvm/bin)
+if(CLANG_TIDY)
+    set(LINT_SOURCES
+        ${CMAKE_SOURCE_DIR}/src/OrderBook.cpp
+        ${CMAKE_SOURCE_DIR}/src/PriceLevel.cpp
+        ${CMAKE_SOURCE_DIR}/src/main.cpp
+    )
+    add_custom_target(lint
+        COMMAND ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR}
+            --extra-arg=--sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+            ${LINT_SOURCES}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running clang-tidy"
+    )
+endif()
